@@ -1278,6 +1278,40 @@ void Project::removeClips(const std::vector<Id>& clipIds, bool withLinks)
 }
 
 
+size_t Project::clipCountOfMedia(Id mediaId) const
+{
+    size_t count = 0;
+
+    for (const Sequence* sequence : sequences()) {
+        for (const auto* tracks : { &sequence->videoTracks, &sequence->soundTracks, &sequence->audioTracks, &sequence->subtitleTracks }) {
+            for (const Track& track : *tracks) {
+                count += std::count_if(track.clips.begin(), track.clips.end(), [&](const Clip& clip) { return clip.mediaId == mediaId; });
+            }
+        }
+    }
+
+    return count;
+}
+
+
+void Project::removeMedia(const std::vector<Id>& mediaIds)
+{
+    auto removed = [&](Id mediaId) {
+        return std::find(mediaIds.begin(), mediaIds.end(), mediaId) != mediaIds.end();
+    };
+
+    for (Sequence* sequence : sequences()) {
+        for (auto* tracks : { &sequence->videoTracks, &sequence->soundTracks, &sequence->audioTracks, &sequence->subtitleTracks }) {
+            for (Track& track : *tracks) {
+                std::erase_if(track.clips, [&](const Clip& clip) { return removed(clip.mediaId); });
+            }
+        }
+    }
+
+    std::erase_if(_media, [&](const MediaItem& item) { return removed(item.id); });
+}
+
+
 void Project::rippleDelete(const std::vector<Id>& clipIds, bool withLinks)
 {
     std::vector<Id> linkGroups;

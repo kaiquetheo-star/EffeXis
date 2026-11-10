@@ -1884,7 +1884,7 @@ void GUI::mediaPanel()
         size_t used = 0;
 
         for (Id id : removeMedia) {
-            used += clipsOfMedia(id).size();
+            used += _project.clipCountOfMedia(id);
         }
 
         if (used == 0) {
@@ -1902,7 +1902,7 @@ void GUI::mediaPanel()
         size_t count = 0;
 
         for (Id id : _confirmRemoveMedia) {
-            count += clipsOfMedia(id).size();
+            count += _project.clipCountOfMedia(id);
         }
 
         const MediaItem* item = _confirmRemoveMedia.size() == 1 ? _project.findMedia(_confirmRemoveMedia.front()) : nullptr;
@@ -1969,11 +1969,9 @@ void GUI::removeMediaAndClips(const std::vector<Id>& mediaIds)
         clips.insert(clips.end(), ofMedia.begin(), ofMedia.end());
     }
 
-    _project.removeClips(clips);
-
-    std::erase_if(_project.media(), [&](const MediaItem& item) {
-        return std::find(mediaIds.begin(), mediaIds.end(), item.id) != mediaIds.end();
-    });
+    // From all the sequences: a clip of another one would be left without
+    // its media.
+    _project.removeMedia(mediaIds);
 
     std::erase_if(_mediaSelection, [&](Id id) { return std::find(mediaIds.begin(), mediaIds.end(), id) != mediaIds.end(); });
 

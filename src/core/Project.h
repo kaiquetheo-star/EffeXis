@@ -525,6 +525,14 @@ namespace core
         // selection already holds them, unless picked alone).
         void removeClips(const std::vector<Id>& clipIds, bool withLinks = true);
 
+        // Count of the clips of a media, in all the sequences (not only the
+        // one shown).
+        size_t clipCountOfMedia(Id mediaId) const;
+
+        // Removes media and their clips from all the sequences, locked
+        // tracks included: no clip is left without its media.
+        void removeMedia(const std::vector<Id>& mediaIds);
+
         // Removes the clips and their linked clips, and closes the gaps they
         // leave: the next clips of their tracks move back by the removed
         // length. Other tracks are left as they are.

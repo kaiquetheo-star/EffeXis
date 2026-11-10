@@ -315,6 +315,15 @@ void testSequences()
     }
 
     CHECK(found);
+
+    // A media removed while another sequence is shown: its clips in the
+    // intro go with it, none is left without its media.
+    CHECK(project.clipCountOfMedia(voice) == 1);
+    project.removeMedia({ voice });
+    CHECK(project.findMedia(voice) == nullptr);
+    CHECK(project.clipCountOfMedia(voice) == 0);
+    CHECK(project.findSequence(intro)->audioTracks[0].clips.empty());
+    CHECK(project.findSequence(intro)->videoTracks[0].clips.size() == 1);
 }
 
 
