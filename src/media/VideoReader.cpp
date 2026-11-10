@@ -13,6 +13,7 @@ extern "C" {
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 
 using namespace core;
@@ -60,6 +61,109 @@ AVPixelFormat getFormat(AVCodecContext* codec, const AVPixelFormat* formats)
     }
 
     return AV_PIX_FMT_NONE;
+}
+
+
+// Up to this alpha, a texel is not seen: lossy codecs (VP9) leave a little
+// alpha in the transparent parts.
+constexpr uint8_t HiddenAlpha = 2;
+
+
+// Gives the transparent texels the color of their visible neighbors,
+// ring by ring, up to the given number of rings. The pictures keep straight
+// alpha, and their filtering (bilinear, bicubic, Lanczos, blur) mixes the
+// colors of neighboring texels whatever their alpha: the black usually stored
+// under transparent pixels would otherwise darken the edges.
+void bleedTransparentColors(uint8_t* rgba, uint32_t width, uint32_t height, int rings)
+{
+    const size_t count = (size_t)width * height;
+
+    // 0: transparent, 1: has a color, 2: transparent, in the next ring.
+    std::vector<uint8_t> state(count);
+    size_t transparent = 0;
+
+    for (size_t i = 0; i < count; i++) {
+        state[i] = (rgba[i * 4 + 3] > HiddenAlpha) ? 1 : 0;
+        transparent += (state[i] == 0);
+    }
+
+    if (transparent == 0 || transparent == count) {
+        return;
+    }
+
+    auto forNeighbors = [width, height](size_t index, auto&& visit) {
+        const int64_t x = (int64_t)(index % width);
+        const int64_t y = (int64_t)(index / width);
+
+        for (int64_t ny = std::max<int64_t>(y - 1, 0); ny <= std::min<int64_t>(y + 1, height - 1); ny++) {
+            for (int64_t nx = std::max<int64_t>(x - 1, 0); nx <= std::min<int64_t>(x + 1, width - 1); nx++) {
+                if (nx != x || ny != y) {
+                    visit((size_t)(ny * width + nx));
+                }
+            }
+        }
+    };
+
+    // The first ring: the transparent texels touching a visible one.
+    std::vector<size_t> ring;
+    std::vector<size_t> next;
+
+    for (size_t i = 0; i < count; i++) {
+        if (state[i] == 0) {
+            bool edge = false;
+            forNeighbors(i, [&](size_t n) { edge |= (state[n] == 1); });
+
+            if (edge) {
+                state[i] = 2;
+                ring.push_back(i);
+            }
+        }
+    }
+
+    std::vector<uint8_t> colors;
+
+    for (int r = 0; r < rings && !ring.empty(); r++) {
+        // The average of the colored neighbors, written once the whole ring
+        // is done so that it does not lean on its own texels.
+        colors.resize(ring.size() * 3);
+
+        for (size_t k = 0; k < ring.size(); k++) {
+            uint32_t sum[3] = {};
+            uint32_t n = 0;
+
+            forNeighbors(ring[k], [&](size_t neighbor) {
+                if (state[neighbor] == 1) {
+                    for (int c = 0; c < 3; c++) {
+                        sum[c] += rgba[neighbor * 4 + c];
+                    }
+
+                    n++;
+                }
+            });
+
+            for (int c = 0; c < 3; c++) {
+                colors[k * 3 + c] = (uint8_t)((sum[c] + n / 2) / std::max<uint32_t>(n, 1));
+            }
+        }
+
+        for (size_t k = 0; k < ring.size(); k++) {
+            std::memcpy(rgba + ring[k] * 4, colors.data() + k * 3, 3);
+            state[ring[k]] = 1;
+        }
+
+        next.clear();
+
+        for (size_t index : ring) {
+            forNeighbors(index, [&](size_t n) {
+                if (state[n] == 0) {
+                    state[n] = 2;
+                    next.push_back(n);
+                }
+            });
+        }
+
+        ring.swap(next);
+    }
 }
 
 } // namespace
@@ -129,6 +233,19 @@ void VideoReader::openDecoder(AVBufferRef* hwDevice)
     }
 
     const AVStream* stream = _format->streams[_streamIndex];
+
+    // VP8 and VP9 with transparency (WebM): the alpha is a second stream in
+    // side data, that only the libvpx decoders read.
+    const AVDictionaryEntry* alphaMode = av_dict_get(stream->metadata, "alpha_mode", nullptr, 0);
+
+    if (alphaMode && std::strcmp(alphaMode->value, "1") == 0) {
+        const char* name = (stream->codecpar->codec_id == AV_CODEC_ID_VP9) ? "libvpx-vp9"
+                         : (stream->codecpar->codec_id == AV_CODEC_ID_VP8) ? "libvpx" : nullptr;
+
+        if (const AVCodec* withAlpha = name ? avcodec_find_decoder_by_name(name) : nullptr) {
+            decoder = withAlpha;
+        }
+    }
 
     _timeBase = { stream->time_base.num, stream->time_base.den };
     _startTime = (stream->start_time != AV_NOPTS_VALUE)
@@ -293,6 +410,16 @@ std::shared_ptr<VideoFrame> VideoReader::makeFrame()
             for (uint32_t y = 0; y < frame->height; y++) {
                 std::memcpy(frame->rgba.data() + y * rowSize, rgba->data[0] + (size_t)y * rgba->linesize[0], rowSize);
             }
+
+            // Pictures with transparency (alpha channel, or a palette that
+            // may have one): colors under the transparent pixels, all of them
+            // for a still image (decoded once), a few rings for a video.
+            const AVPixFmtDescriptor* descriptor = av_pix_fmt_desc_get((AVPixelFormat)_frame->format);
+
+            if (descriptor && (descriptor->flags & (AV_PIX_FMT_FLAG_ALPHA | AV_PIX_FMT_FLAG_PAL))) {
+                bleedTransparentColors(frame->rgba.data(), frame->width, frame->height,
+                    _stillImage ? std::numeric_limits<int>::max() : 4);
+            }
         }
 
         av_frame_free(&rgba);
@@ -327,7 +454,10 @@ std::shared_ptr<VideoFrame> VideoReader::frameAt(Time t)
 
     const bool forward = _last && t >= _last->time && t < _last->end() + ForwardDecodeLimit;
 
-    if (!forward) {
+    // A still image is its first frame, read without a seek: the image2
+    // demuxer (TGA, and the other files without a signature) loses its only
+    // packet when it seeks.
+    if (!forward && !_stillImage) {
         seek(std::max<Time>(0, t));
     }
 
