@@ -2593,7 +2593,7 @@ void GUI::addText()
 std::filesystem::path GUI::shaderFolder() const
 {
     const char* documents = SDL_GetUserFolder(SDL_FOLDER_DOCUMENTS);
-    return (documents ? std::filesystem::u8path(documents) : std::filesystem::temp_directory_path()) / "QuickEdit" / "Shaders";
+    return (documents ? std::filesystem::u8path(documents) : std::filesystem::temp_directory_path()) / "EffeXis" / "Shaders";
 }
 
 
@@ -3929,10 +3929,10 @@ std::filesystem::path GUI::recordingPath(const char* prefix, const char* extensi
         folder = _projectPath.parent_path() / "Recordings";
     }
     else if (const char* documents = SDL_GetUserFolder(SDL_FOLDER_DOCUMENTS)) {
-        folder = std::filesystem::u8path(documents) / "QuickEdit" / "Recordings";
+        folder = std::filesystem::u8path(documents) / "EffeXis" / "Recordings";
     }
     else {
-        folder = std::filesystem::temp_directory_path() / "QuickEdit Recordings";
+        folder = std::filesystem::temp_directory_path() / "EffeXis Recordings";
     }
 
     const std::time_t now = std::time(nullptr);
@@ -5602,7 +5602,7 @@ void GUI::preferencesPopup()
     ImGui::SeparatorText(tr(ICON_MD_SMART_TOY " AI Control"));
     bool mcp = _mcpEnabled;
 
-    if (ImGui::Checkbox(tr("Let an AI assistant use QuickEdit (MCP server)"), &mcp)) {
+    if (ImGui::Checkbox(tr("Let an AI assistant use EffeXis (MCP server)"), &mcp)) {
         setMcpEnabled(mcp);
         saveSetting("mcpServer", mcp);
     }

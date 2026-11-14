@@ -1,0 +1,17 @@
+{
+  "format": "EffeXis effect preset",
+  "version": 1,
+  "id": "warm_film",
+  "name": "Warm Film",
+  "description": "Soft contrast, warm grade and light grain",
+  "steps": [
+    {
+      "type": "film_look",
+      "parameters": [1.2, 0.8, 0.25, 0.1, 0.22]
+    },
+    {
+      "type": "vignette",
+      "parameters": [0.35, 0.55, 0.45]
+    }
+  ]
+}

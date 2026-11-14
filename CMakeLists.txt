@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(QuickEdit)
+project(EffeXis)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,14 +45,13 @@ if (NOT APP_VERSION)
     set(APP_VERSION "0.1.0")
 endif()
 
-set(APP_NAME_STR "QuickEdit")
+set(APP_NAME_STR "EffeXis")
 set(APP_VERSION_STR "${APP_VERSION}")
 
-set(APP_IDENTIFIER_STR "zovelik.quickedit")
+set(APP_IDENTIFIER_STR "effexis.editor")
 
-# Where QuickEdit looks for newer releases (GitHub owner/name); empty for no
-# update check.
-set(QUICKEDIT_UPDATE_REPO "Zovelik/QuickEdit" CACHE STRING "GitHub repository checked for new releases (owner/name), empty for none")
+# Disable upstream QuickEdit update checks for this fork by default.
+set(QUICKEDIT_UPDATE_REPO "" CACHE STRING "GitHub repository checked for new releases (owner/name), empty for none")
 set(UPDATE_REPO_STR "${QUICKEDIT_UPDATE_REPO}")
 
 configure_file(cmake/config.h.in config.h @ONLY)
@@ -76,15 +75,15 @@ enable_testing()
 add_subdirectory(tests)
 
 # Packages (cpack): an installer and a zip on Windows, an AppImage on Linux.
-set(CPACK_PACKAGE_NAME "QuickEdit")
-set(CPACK_PACKAGE_VENDOR "Zovelik")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Video editor, simple to use yet powerful, rendered with Vulkan")
+set(CPACK_PACKAGE_NAME "EffeXis")
+set(CPACK_PACKAGE_VENDOR "EffeXis")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open-source GPU video editor with Effect-style looks and MCP for AI assistants")
 set(CPACK_PACKAGE_VERSION "${APP_VERSION}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "QuickEdit")
-set(CPACK_PACKAGE_EXECUTABLES "QuickEdit;QuickEdit")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "EffeXis")
+set(CPACK_PACKAGE_EXECUTABLES "EffeXis;EffeXis")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_SOURCE_GENERATOR "")
-set(CPACK_PACKAGE_FILE_NAME "QuickEdit-${APP_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "EffeXis-${APP_VERSION}-${CMAKE_SYSTEM_NAME}")
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/LICENSE")
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")

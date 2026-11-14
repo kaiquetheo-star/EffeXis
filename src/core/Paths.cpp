@@ -13,19 +13,19 @@ std::filesystem::path configDirectory()
 
 #ifdef _WIN32
     if (const wchar_t* appData = _wgetenv(L"APPDATA")) {
-        folder = std::filesystem::path(appData) / "QuickEdit";
+        folder = std::filesystem::path(appData) / "EffeXis";
     }
 #else
     if (const char* config = std::getenv("XDG_CONFIG_HOME"); config && *config) {
-        folder = std::filesystem::path(config) / "quickedit";
+        folder = std::filesystem::path(config) / "effexis";
     }
     else if (const char* home = std::getenv("HOME")) {
-        folder = std::filesystem::path(home) / ".config" / "quickedit";
+        folder = std::filesystem::path(home) / ".config" / "effexis";
     }
 #endif
 
     if (folder.empty()) {
-        folder = std::filesystem::temp_directory_path() / "QuickEdit";
+        folder = std::filesystem::temp_directory_path() / "EffeXis";
     }
 
     std::error_code error;
@@ -41,19 +41,19 @@ std::filesystem::path cacheDirectory()
 
 #ifdef _WIN32
     if (const wchar_t* localAppData = _wgetenv(L"LOCALAPPDATA")) {
-        folder = std::filesystem::path(localAppData) / "QuickEdit" / "Cache";
+        folder = std::filesystem::path(localAppData) / "EffeXis" / "Cache";
     }
 #else
     if (const char* cache = std::getenv("XDG_CACHE_HOME"); cache && *cache) {
-        folder = std::filesystem::path(cache) / "quickedit";
+        folder = std::filesystem::path(cache) / "effexis";
     }
     else if (const char* home = std::getenv("HOME")) {
-        folder = std::filesystem::path(home) / ".cache" / "quickedit";
+        folder = std::filesystem::path(home) / ".cache" / "effexis";
     }
 #endif
 
     if (folder.empty()) {
-        folder = std::filesystem::temp_directory_path() / "QuickEdit";
+        folder = std::filesystem::temp_directory_path() / "EffeXis";
     }
 
     std::error_code error;

@@ -5,6 +5,7 @@
 #include <app/GUI.h>
 #include <app/I18n.h>
 
+#include <core/EffectPresets.h>
 #include <core/Layers.h>
 #include <core/Subtitles.h>
 #include <core/VideoEffects.h>
@@ -220,21 +221,21 @@ Json GUI::mcpTools()
 
     // Seeing
     tools.push_back(tool("get_project",
-        "The project shown in QuickEdit: the current sequence (size, frame rate, length), its tracks with their clips (times in seconds), "
+        "The project shown in EffeXis: the current sequence (size, frame rate, length), its tracks with their clips (times in seconds), "
         "the other sequences, the media (length, size, audio), the playhead. Start with this."));
     tools.push_back(tool("get_clip",
         "A clip as stored in the project (JSON, times in ticks: 705600000 per second): text spans and styles, transform with keyframes, "
         "effects, frame, transition... Change it with update_clip.",
         R"({"clip_id": {"type": "integer"}})", R"(["clip_id"])"));
     tools.push_back(tool("render_frame",
-        "The picture of the current sequence at a time, as QuickEdit composites it (PNG). Use it to check a result.",
+        "The picture of the current sequence at a time, as EffeXis composites it (PNG). Use it to check a result.",
         R"({"time": {"type": "number", "description": "Seconds"}, "width": {"type": "integer", "description": "Width of the picture, 960 by default"}})",
         R"(["time"])"));
     tools.push_back(tool("transcribe_media",
-        "The speech of a media (video or audio) with its times, by speech recognition (whisper.cpp, a model must be downloaded in QuickEdit). "
+        "The speech of a media (video or audio) with its times, by speech recognition (whisper.cpp, a model must be downloaded in EffeXis). "
         "Can take a minute.",
         R"({"media_id": {"type": "integer"}, "language": {"type": "string", "description": "auto (default), en, fr..."},
-            "vocabulary": {"type": "string", "description": "Names and words to expect, spelled right, such as: QuickEdit, Vulkan, MCP"}})",
+            "vocabulary": {"type": "string", "description": "Names and words to expect, spelled right, such as: EffeXis, Vulkan, MCP"}})",
         R"(["media_id"])"));
     tools.push_back(tool("list_shaders",
         "The shaders (built in and the user's): generators (pictures), transitions, blend modes, resampling; their ids and parameters."));
@@ -303,10 +304,31 @@ Json GUI::mcpTools()
     tools.push_back(tool("add_effect", addEffect.c_str(),
         R"({"type": {"type": "string"}, "clip_id": {"type": "integer"}, "track_id": {"type": "integer"}, "parameters": {"type": "object"}})",
         R"(["type"])"));
+    tools.push_back(tool("effects_list",
+        "Lists built-in video effect types and EffeXis look presets (id, name, description, steps)."));
+    tools.push_back(tool("effects_apply_preset",
+        "Replaces the video effects of a clip or video track with an EffeXis look preset (see effects_list). "
+        "append: keep existing effects and add the preset after them.",
+        R"({"preset_id": {"type": "string"}, "clip_id": {"type": "integer"}, "track_id": {"type": "integer"}, "append": {"type": "boolean"},
+            "preset_path": {"type": "string", "description": "Optional .effexis-preset.json path instead of a built-in id"}})",
+        R"([])"));
+    tools.push_back(tool("effects_set_param",
+        "Sets one parameter of a video effect already on a clip or track.",
+        R"({"effect_id": {"type": "integer"}, "clip_id": {"type": "integer"}, "track_id": {"type": "integer"},
+            "name": {"type": "string"}, "value": {"type": "number"}})",
+        R"(["effect_id", "name", "value"])"));
+    tools.push_back(tool("effects_clear",
+        "Removes all video effects from a clip or video track.",
+        R"({"clip_id": {"type": "integer"}, "track_id": {"type": "integer"}})"));
+    tools.push_back(tool("effects_save_preset",
+        "Saves the current video effects of a clip or track as Documents/EffeXis/Presets/<id>.effexis-preset.json.",
+        R"({"id": {"type": "string"}, "name": {"type": "string"}, "description": {"type": "string"},
+            "clip_id": {"type": "integer"}, "track_id": {"type": "integer"}, "path": {"type": "string"}})",
+        R"(["id", "name"])"));
 
     // Shaders
     tools.push_back(tool("write_shader",
-        "Creates or replaces a shader of the user (GLSL, Documents/QuickEdit/Shaders/<name>.glsl) and compiles it: its id, or the errors (with "
+        "Creates or replaces a shader of the user (GLSL, Documents/EffeXis/Shaders/<name>.glsl) and compiles it: its id, or the errors (with "
         "their lines) to fix. Its kind comes from the function it defines: vec4 generate(vec2 uv, float time) (iResolution, iTime, iDuration, "
         "param(i)); vec4 transition(vec2 uv) (getFromColor(uv), getToColor(uv), progress, ratio); vec3 blend(vec3 base, vec3 layer); "
         "vec4 resample(vec2 uv) (source(ivec2), iSourceSize, iResolution, iTime). All get the sound: iLevel, iBass, iMid, iTreble (0 to 1); "
@@ -321,7 +343,7 @@ Json GUI::mcpTools()
         R"({"name": {"type": "string"}, "source": {"type": "string"}})", R"(["name", "source"])"));
 
     // Project
-    tools.push_back(tool("set_playhead", "Moves the playhead of QuickEdit (what the user sees).",
+    tools.push_back(tool("set_playhead", "Moves the playhead of EffeXis (what the user sees).",
         R"({"time": {"type": "number"}})", R"(["time"])"));
     tools.push_back(tool("play", "Plays the sequence in the viewer, with its sound (from time when given), until pause or its end.",
         R"({"time": {"type": "number"}})"));
@@ -335,7 +357,7 @@ Json GUI::mcpTools()
         "shader_editor (with shader_id of a shader of the user), export, preferences, project_properties, keyframes, effects; or close: "
         "true to close the floating ones and the popups.",
         R"({"window": {"type": "string"}, "shader_id": {"type": "string"}, "close": {"type": "boolean"}})"));
-    tools.push_back(tool("reset_layout", "Puts the panels of QuickEdit back in their default places and sizes (same framing for screen captures)."));
+    tools.push_back(tool("reset_layout", "Puts the panels of EffeXis back in their default places and sizes (same framing for screen captures)."));
     tools.push_back(tool("place_window",
         "Places a floating window: shader_editor, record_scene, record_screen, record_voice, generate_subtitles; x, y, width, height in "
         "fractions of the main window (0 to 1). Show it with show_window.",
@@ -1299,6 +1321,250 @@ std::optional<Json> GUI::mcpCall(const std::string& name, const Json& args, int 
 
         Json answer = Json::object();
         answer["effect_id"] = effect.id;
+        return done(answer);
+    }
+
+    if (name == "effects_list") {
+        Json types = Json::array();
+
+        for (const VideoEffectInfo& info : videoEffectInfos()) {
+            Json entry = Json::object();
+            entry["id"] = info.id;
+            entry["name"] = info.name;
+            Json parameters = Json::array();
+
+            for (const VideoEffectParameter& parameter : info.parameters) {
+                Json p = Json::object();
+                p["name"] = parameter.name;
+                p["min"] = parameter.minimum;
+                p["max"] = parameter.maximum;
+                p["default"] = parameter.defaultValue;
+                parameters.push_back(p);
+            }
+
+            entry["parameters"] = parameters;
+            types.push_back(entry);
+        }
+
+        Json presets = Json::array();
+
+        for (const EffectPreset& preset : builtinEffectPresets()) {
+            presets.push_back(effectPresetToJson(preset));
+        }
+
+        Json answer = Json::object();
+        answer["types"] = types;
+        answer["presets"] = presets;
+        return done(answer);
+    }
+
+    if (name == "effects_apply_preset") {
+        EffectPreset preset;
+        std::string presetError;
+
+        if (args.contains("preset_path") && !args["preset_path"].toString().empty()) {
+            if (!loadEffectPresetFile(std::filesystem::u8path(args["preset_path"].toString()), preset, presetError)) {
+                return error(presetError);
+            }
+        }
+        else {
+            const std::string presetId = args["preset_id"].toString();
+            const EffectPreset* builtin = effectPreset(presetId);
+
+            if (!builtin) {
+                return error("Unknown preset_id. Call effects_list, or pass preset_path.");
+            }
+
+            preset = *builtin;
+        }
+
+        std::vector<VideoEffect>* effects = nullptr;
+
+        if (Clip* clip = args.contains("clip_id") ? _project.findClip((Id)args["clip_id"].toInt()) : nullptr) {
+            effects = &clip->videoEffects;
+        }
+        else if (Track* track = trackFromArgs("track_id"); track && track->type == TrackType::Video) {
+            effects = &track->videoEffects;
+        }
+
+        if (!effects) {
+            return error("Give a clip_id or the track_id of a video track.");
+        }
+
+        if (!args["append"].toBool(false)) {
+            effects->clear();
+        }
+
+        Json effectIds = Json::array();
+
+        for (const EffectPresetStep& step : preset.steps) {
+            VideoEffect effect = makeVideoEffect(_project.newId(), step.type);
+            const VideoEffectInfo* info = effect.info();
+
+            if (!info) continue;
+
+            for (size_t i = 0; i < info->parameters.size() && i < step.parameters.size() && i < effect.parameters.size(); i++) {
+                effect.parameters[i] = AnimatedValue(step.parameters[i]);
+            }
+
+            effectIds.push_back(effect.id);
+            effects->push_back(effect);
+        }
+
+        edited("apply effect preset");
+
+        Json answer = Json::object();
+        answer["preset_id"] = preset.id;
+        answer["effect_ids"] = effectIds;
+        answer["effect_count"] = (int64_t)effectIds.items().size();
+        return done(answer);
+    }
+
+    if (name == "effects_set_param") {
+        const Id effectId = (Id)args["effect_id"].toInt();
+        std::vector<VideoEffect>* effects = nullptr;
+
+        if (Clip* clip = args.contains("clip_id") ? _project.findClip((Id)args["clip_id"].toInt()) : nullptr) {
+            effects = &clip->videoEffects;
+        }
+        else if (Track* track = trackFromArgs("track_id"); track && track->type == TrackType::Video) {
+            effects = &track->videoEffects;
+        }
+        else {
+            // Search the open sequence when the owner was omitted.
+            for (Track& track : _project.sequence().videoTracks) {
+                for (VideoEffect& effect : track.videoEffects) {
+                    if (effect.id == effectId) {
+                        effects = &track.videoEffects;
+                        break;
+                    }
+                }
+
+                if (effects) break;
+
+                for (Clip& clip : track.clips) {
+                    for (VideoEffect& effect : clip.videoEffects) {
+                        if (effect.id == effectId) {
+                            effects = &clip.videoEffects;
+                            break;
+                        }
+                    }
+
+                    if (effects) break;
+                }
+
+                if (effects) break;
+            }
+        }
+
+        if (!effects) {
+            return error("Effect not found. Give clip_id/track_id or a known effect_id.");
+        }
+
+        VideoEffect* effect = nullptr;
+
+        for (VideoEffect& candidate : *effects) {
+            if (candidate.id == effectId) {
+                effect = &candidate;
+                break;
+            }
+        }
+
+        if (!effect || !effect->info()) {
+            return error("Effect not found on that clip or track.");
+        }
+
+        const std::string paramName = args["name"].toString();
+        const VideoEffectInfo& info = *effect->info();
+        size_t index = info.parameters.size();
+
+        for (size_t i = 0; i < info.parameters.size(); i++) {
+            if (paramName == info.parameters[i].name) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index >= effect->parameters.size()) {
+            return error("Unknown parameter " + paramName);
+        }
+
+        effect->parameters[index] = AnimatedValue((float)args["value"].toDouble());
+        edited("set effect parameter");
+        return McpServer::textResult("Parameter updated.");
+    }
+
+    if (name == "effects_clear") {
+        std::vector<VideoEffect>* effects = nullptr;
+
+        if (Clip* clip = args.contains("clip_id") ? _project.findClip((Id)args["clip_id"].toInt()) : nullptr) {
+            effects = &clip->videoEffects;
+        }
+        else if (Track* track = trackFromArgs("track_id"); track && track->type == TrackType::Video) {
+            effects = &track->videoEffects;
+        }
+
+        if (!effects) {
+            return error("Give a clip_id or the track_id of a video track.");
+        }
+
+        effects->clear();
+        edited("clear effects");
+        return McpServer::textResult("Effects cleared.");
+    }
+
+    if (name == "effects_save_preset") {
+        std::vector<VideoEffect>* effects = nullptr;
+
+        if (Clip* clip = args.contains("clip_id") ? _project.findClip((Id)args["clip_id"].toInt()) : nullptr) {
+            effects = &clip->videoEffects;
+        }
+        else if (Track* track = trackFromArgs("track_id"); track && track->type == TrackType::Video) {
+            effects = &track->videoEffects;
+        }
+
+        if (!effects) {
+            return error("Give a clip_id or the track_id of a video track.");
+        }
+
+        EffectPreset preset;
+        preset.id = args["id"].toString();
+        preset.name = args["name"].toString();
+        preset.description = args["description"].toString();
+
+        for (const VideoEffect& effect : *effects) {
+            if (!effect.info()) continue;
+
+            EffectPresetStep step;
+            step.type = effect.type;
+
+            for (const AnimatedValue& value : effect.parameters) {
+                step.parameters.push_back(value.at(0));
+            }
+
+            preset.steps.push_back(step);
+        }
+
+        std::filesystem::path path;
+
+        if (args.contains("path") && !args["path"].toString().empty()) {
+            path = std::filesystem::u8path(args["path"].toString());
+        }
+        else {
+            const char* documents = SDL_GetUserFolder(SDL_FOLDER_DOCUMENTS);
+            path = (documents ? std::filesystem::u8path(documents) : std::filesystem::temp_directory_path())
+                / "EffeXis" / "Presets" / std::filesystem::u8path(preset.id + ".effexis-preset.json");
+        }
+
+        std::string saveError;
+
+        if (!saveEffectPresetFile(path, preset, saveError)) {
+            return error(saveError);
+        }
+
+        Json answer = Json::object();
+        const std::u8string pathUtf8 = path.u8string();
+        answer["path"] = std::string(pathUtf8.begin(), pathUtf8.end());
         return done(answer);
     }
 

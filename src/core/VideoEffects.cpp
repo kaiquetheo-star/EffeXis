@@ -11,6 +11,11 @@ namespace core
 #define ICON_VIGNETTE "\xee\x90\xb5"    // vignette
 #define ICON_KEY "\xee\x90\xa1"         // texture
 #define ICON_PIXELATE "\xee\x8f\xac"    // grid_on
+#define ICON_GRAIN "\xee\x8f\x9b"       // grain
+#define ICON_SHIFT "\xee\x97\x8e"       // filter_b_and_w
+#define ICON_CRT "\xee\x8e\xb0"         // desktop_windows
+#define ICON_GLITCH "\xee\x95\x93"      // flash_on
+#define ICON_FILM "\xee\x8e\xa0"        // movie
 
 
 const std::vector<VideoEffectInfo>& videoEffectInfos()
@@ -45,6 +50,32 @@ const std::vector<VideoEffectInfo>& videoEffectInfos()
         }, true },
         { VideoEffectType::Pixelate, "pixelate", "Pixelate", ICON_PIXELATE, {
             { "Size", 1.f, 200.f, 16.f, "%.0f px" },
+        } },
+        { VideoEffectType::Grain, "grain", "Film Grain", ICON_GRAIN, {
+            { "Amount", 0.f, 1.f, 0.35f, "%.0f %%", 100.f },
+            { "Size", 0.5f, 4.f, 1.f, "%.2f" },
+            { "Softness", 0.f, 1.f, 0.25f, "%.0f %%", 100.f },
+        } },
+        { VideoEffectType::RgbShift, "rgb_shift", "RGB Shift", ICON_SHIFT, {
+            { "Amount", 0.f, 20.f, 3.f, "%.1f px" },
+            { "Angle", -180.f, 180.f, 0.f, "%+.0f\xc2\xb0" },
+        } },
+        { VideoEffectType::Crt, "crt", "CRT", ICON_CRT, {
+            { "Scanlines", 0.f, 1.f, 0.45f, "%.0f %%", 100.f },
+            { "Curvature", 0.f, 1.f, 0.2f, "%.0f %%", 100.f },
+            { "Glow", 0.f, 1.f, 0.15f, "%.0f %%", 100.f },
+        } },
+        { VideoEffectType::Glitch, "glitch", "Glitch", ICON_GLITCH, {
+            { "Amount", 0.f, 1.f, 0.4f, "%.0f %%", 100.f },
+            { "BlockSize", 2.f, 64.f, 16.f, "%.0f px" },
+            { "Speed", 0.f, 4.f, 1.f, "%.2f" },
+        } },
+        { VideoEffectType::FilmLook, "film_look", "Film Look", ICON_FILM, {
+            { "Contrast", 0.5f, 2.f, 1.15f, "%.0f %%", 100.f },
+            { "Saturation", 0.f, 2.f, 0.85f, "%.0f %%", 100.f },
+            { "Warmth", -1.f, 1.f, 0.15f, "%+.0f", 100.f },
+            { "Fade", 0.f, 1.f, 0.12f, "%.0f %%", 100.f },
+            { "Grain", 0.f, 1.f, 0.2f, "%.0f %%", 100.f },
         } },
     };
 

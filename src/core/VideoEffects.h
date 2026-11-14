@@ -23,7 +23,12 @@ namespace core
         Sharpen,
         Vignette,
         ChromaKey,
-        Pixelate
+        Pixelate,
+        Grain,
+        RgbShift,
+        Crt,
+        Glitch,
+        FilmLook
     };
 
 

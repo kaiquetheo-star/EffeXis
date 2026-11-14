@@ -2290,7 +2290,7 @@ Id Project::addSequenceClip(Id sequenceId, Id trackId, Time start)
 Json Project::toJson(const std::filesystem::path& projectDir) const
 {
     Json json = Json::object();
-    json["format"] = "QuickEdit project";
+    json["format"] = "EffeXis project";
     json["version"] = FileVersion;
     json["nextId"] = _nextId;
 
@@ -2367,12 +2367,15 @@ void Project::fromJson(const Json& json, const std::filesystem::path& projectDir
 {
     const int64_t version = json["version"].toInt(-1);
 
-    if (json["format"].toString() != "QuickEdit project" || version < 1) {
-        throw std::runtime_error("Not a QuickEdit project");
+    const std::string format = json["format"].toString();
+    const bool knownFormat = format == "EffeXis project" || format == "QuickEdit project";
+
+    if (!knownFormat || version < 1) {
+        throw std::runtime_error("Not an EffeXis project");
     }
 
     if (version > FileVersion) {
-        throw std::runtime_error("This project was saved by a newer version of QuickEdit");
+        throw std::runtime_error("This project was saved by a newer version of EffeXis");
     }
 
     Project loaded;

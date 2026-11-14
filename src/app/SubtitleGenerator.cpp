@@ -41,7 +41,7 @@ const std::vector<WhisperModel>& whisperModels()
 std::filesystem::path modelFolder()
 {
     const char* documents = SDL_GetUserFolder(SDL_FOLDER_DOCUMENTS);
-    return (documents ? std::filesystem::u8path(documents) : std::filesystem::temp_directory_path()) / "QuickEdit" / "Models";
+    return (documents ? std::filesystem::u8path(documents) : std::filesystem::temp_directory_path()) / "EffeXis" / "Models";
 }
 
 

@@ -7,6 +7,7 @@
 #include <audio/Mixer.h>
 #include <media/MediaFile.h>
 
+#include <core/EffectPresets.h>
 #include <core/History.h>
 #include <core/Layers.h>
 #include <core/TextEdit.h>
@@ -14,6 +15,7 @@
 #include <core/Project.h>
 #include <core/Subtitles.h>
 #include <core/Time.h>
+#include <core/VideoEffects.h>
 
 #include <algorithm>
 #include <cmath>
@@ -1043,6 +1045,42 @@ void testSpeedAndTracks()
     CHECK(sequence.audioTracks.empty() || sequence.audioTracks[0].name == "A1");
 }
 
+
+void testEffectPresets()
+{
+    CHECK(videoEffectInfo("grain") != nullptr);
+    CHECK(videoEffectInfo("rgb_shift") != nullptr);
+    CHECK(videoEffectInfo("crt") != nullptr);
+    CHECK(videoEffectInfo("glitch") != nullptr);
+    CHECK(videoEffectInfo("film_look") != nullptr);
+
+    const EffectPreset* warm = effectPreset("warm_film");
+    CHECK(warm != nullptr);
+    CHECK(!warm->steps.empty());
+
+    Id nextId = 100;
+    const std::vector<VideoEffect> effects = effectsFromPreset(*warm, nextId);
+    CHECK(effects.size() == warm->steps.size());
+    CHECK(effects[0].type == "film_look");
+
+    const std::filesystem::path path = std::filesystem::temp_directory_path() / "effexis-warm.effexis-preset.json";
+    std::string error;
+    CHECK(saveEffectPresetFile(path, *warm, error));
+
+    EffectPreset loaded;
+    CHECK(loadEffectPresetFile(path, loaded, error));
+    CHECK(loaded.id == "warm_film");
+    CHECK(loaded.steps.size() == warm->steps.size());
+
+    std::error_code ec;
+    std::filesystem::remove(path, ec);
+
+    Project project;
+    project.fromJson(Json::parse(R"({"format":"QuickEdit project","version":1,"nextId":1,"media":[],"sequence":{"id":1,"name":"S","width":1280,"height":720,"frameRate":{"num":30,"den":1},"sampleRate":48000,"videoTracks":[{"id":2,"name":"V1","type":"video","clips":[]}],"soundTracks":[{"id":3,"name":"S1","type":"sound","clips":[]}],"audioTracks":[],"subtitleTracks":[]}})"), {});
+    const Json roundTrip = project.toJson({});
+    CHECK(roundTrip["format"].toString() == "EffeXis project");
+}
+
 } // namespace
 
 
@@ -1067,6 +1105,7 @@ int main()
     testTextEditing();
     testSpeedAndTracks();
     testLoudness();
+    testEffectPresets();
 
     try {
         testDecodeAndMix();

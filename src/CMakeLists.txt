@@ -37,7 +37,12 @@ set(SHADERS
     shader/effect_blur.frag
     shader/effect_chromakey.frag
     shader/effect_color.frag
+    shader/effect_crt.frag
+    shader/effect_film_look.frag
+    shader/effect_glitch.frag
+    shader/effect_grain.frag
     shader/effect_pixelate.frag
+    shader/effect_rgb_shift.frag
     shader/effect_sharpen.frag
     shader/effect_vignette.frag
     shader/rgb_to_nv12.comp
@@ -68,6 +73,7 @@ add_library(QuickEditCore STATIC
     core/Text.cpp
     core/TextEdit.cpp
     core/VideoEffects.cpp
+    core/EffectPresets.cpp
     core/ThreadPool.cpp
 )
 
@@ -158,6 +164,8 @@ if (WIN32)
 else()
     add_executable(QuickEdit ${QUICKEDIT_SRC})
 endif()
+
+set_target_properties(QuickEdit PROPERTIES OUTPUT_NAME "EffeXis")
 
 target_include_directories(QuickEdit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/shader)
 target_include_directories(QuickEdit PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR})

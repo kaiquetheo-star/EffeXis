@@ -6,7 +6,12 @@
 #include <shader/effect_blur.frag.h>
 #include <shader/effect_chromakey.frag.h>
 #include <shader/effect_color.frag.h>
+#include <shader/effect_crt.frag.h>
+#include <shader/effect_film_look.frag.h>
+#include <shader/effect_glitch.frag.h>
+#include <shader/effect_grain.frag.h>
 #include <shader/effect_pixelate.frag.h>
+#include <shader/effect_rgb_shift.frag.h>
 #include <shader/effect_sharpen.frag.h>
 #include <shader/effect_vignette.frag.h>
 #include <shader/layer.frag.h>
@@ -342,6 +347,11 @@ void Compositor::createPipelines(const GPU::PipelineCache& pipelineCache)
         effect(VideoEffectType::Vignette, effect_vignette_frag, effect_vignette_frag_size);
         effect(VideoEffectType::ChromaKey, effect_chromakey_frag, effect_chromakey_frag_size);
         effect(VideoEffectType::Pixelate, effect_pixelate_frag, effect_pixelate_frag_size);
+        effect(VideoEffectType::Grain, effect_grain_frag, effect_grain_frag_size);
+        effect(VideoEffectType::RgbShift, effect_rgb_shift_frag, effect_rgb_shift_frag_size);
+        effect(VideoEffectType::Crt, effect_crt_frag, effect_crt_frag_size);
+        effect(VideoEffectType::Glitch, effect_glitch_frag, effect_glitch_frag_size);
+        effect(VideoEffectType::FilmLook, effect_film_look_frag, effect_film_look_frag_size);
     }
 
     // Shaders of the user: generators (parameters only), transitions (the
